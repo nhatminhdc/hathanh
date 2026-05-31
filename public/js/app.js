@@ -21,23 +21,6 @@ const ICONS = {
 
 let siteData = null;
 let heroInterval = null;
-let supabaseConfigPromise = null;
-
-async function ensureSupabaseConfig() {
-  if (window.SUPABASE_CONFIG?.url && !window.SUPABASE_CONFIG.url.includes('YOUR_')) {
-    return window.SUPABASE_CONFIG;
-  }
-  if (!supabaseConfigPromise) {
-    supabaseConfigPromise = fetch('/api/public-config')
-      .then(async (res) => (res.ok ? res.json() : null))
-      .then((cfg) => {
-        if (cfg?.url && cfg?.anonKey) window.SUPABASE_CONFIG = cfg;
-        return window.SUPABASE_CONFIG || null;
-      })
-      .catch(() => null);
-  }
-  return supabaseConfigPromise;
-}
 
 function formatPrice(price) {
   return new Intl.NumberFormat('vi-VN').format(price) + ' đ';
@@ -67,42 +50,10 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-async function notifyTelegramLead(lead) {
-  const res = await fetch('/api/notify-telegram', {
+async function submitOrderLead(lead) {
+  const res = await fetch('/api/submit-lead', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: lead.name,
-      phone: lead.phone,
-      product_name: lead.product_name,
-      product_price: lead.product_price,
-      product_price_label: lead.product_price_label,
-      note: lead.note,
-    }),
-  });
-  if (!res.ok) {
-    let detail = '';
-    try { detail = await res.text(); } catch { /* ignore */ }
-    throw new Error(detail || `HTTP ${res.status}`);
-  }
-}
-
-async function submitLeadToSupabase(lead) {
-  const cfg = await ensureSupabaseConfig();
-  if (!cfg?.url || !cfg?.anonKey) {
-    throw new Error('Chưa cấu hình Supabase');
-  }
-
-  const baseUrl = cfg.url.replace(/\/$/, '');
-  const table = cfg.table || 'leads';
-  const res = await fetch(`${baseUrl}/rest/v1/${table}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: cfg.anonKey,
-      Authorization: `Bearer ${cfg.anonKey}`,
-      Prefer: 'return=minimal',
-    },
     body: JSON.stringify(lead),
   });
 
@@ -111,6 +62,8 @@ async function submitLeadToSupabase(lead) {
     try { detail = await res.text(); } catch { /* ignore */ }
     throw new Error(detail || `HTTP ${res.status}`);
   }
+
+  return res.json();
 }
 
 function renderHeader(data) {
@@ -601,31 +554,13 @@ function openOrderModal(productId) {
         source: 'quick_order',
       };
 
-      const [supabaseResult, telegramResult] = await Promise.allSettled([
-        submitLeadToSupabase(lead),
-        notifyTelegramLead(lead),
-      ]);
-
-      if (supabaseResult.status === 'rejected') {
-        console.error('Supabase error:', supabaseResult.reason);
-      }
-      if (telegramResult.status === 'rejected') {
-        console.error('Telegram error:', telegramResult.reason);
-      }
-
-      if (supabaseResult.status === 'fulfilled' || telegramResult.status === 'fulfilled') {
-        form.reset();
-        closeOrderModal();
-        showToast('Cảm ơn bạn! Chúng tôi sẽ liên hệ lại sớm nhất.');
-      } else {
-        const supabaseErr = supabaseResult.status === 'rejected' ? String(supabaseResult.reason?.message || '') : '';
-        const telegramErr = telegramResult.status === 'rejected' ? String(telegramResult.reason?.message || '') : '';
-        console.error({ supabaseErr, telegramErr });
-        showToast('Không gửi được đơn hàng. Gọi hotline 0933 969396 hoặc thử lại sau.');
-      }
+      await submitOrderLead(lead);
+      form.reset();
+      closeOrderModal();
+      showToast('Cảm ơn bạn! Chúng tôi sẽ liên hệ lại sớm nhất.');
     } catch (err) {
       console.error('Lead submit error:', err);
-      showToast('Không gửi được. Vui lòng gọi hotline hoặc thử lại sau.');
+      showToast('Không gửi được đơn hàng. Gọi hotline 0933 969396 hoặc thử lại sau.');
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'GỬI';

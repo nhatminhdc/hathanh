@@ -141,6 +141,12 @@ async function handleAPI(req, res, pathname) {
     return;
   }
 
+  if (pathname === '/api/submit-lead' && req.method === 'POST') {
+    const submitLead = require('./api/submit-lead');
+    await submitLead(req, res);
+    return;
+  }
+
   if (pathname === '/api/notify-telegram' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
