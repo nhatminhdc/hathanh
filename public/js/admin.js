@@ -999,8 +999,8 @@ function renderCategoryPriorityBlock(section) {
       </div>
       <div class="adm-hp-picker adm-hp-picker-compact">
         <div class="adm-hp-col">
-          <div class="adm-hp-col-title">Đã chọn (kéo thứ tự ↑↓)</div>
-          <div class="adm-hp-selected cat-selected-list" id="cat-selected-${slug}">
+          <div class="adm-hp-col-title">Đã chọn (kéo thả sắp xếp · bấm × để xóa)</div>
+          <div class="adm-hp-selected cat-selected-list" id="cat-selected-${slug}" data-slug="${slug}">
             ${selectedProducts.length
               ? selectedProducts.map((p, i) => hpProductRow(p, i, selectedProducts.length, slug)).join('')
               : '<p class="adm-empty-sm">Chưa chọn — hiển thị theo tên A-Z</p>'}
@@ -1033,15 +1033,12 @@ function catAvailableRow(p, slug) {
 
 function hpProductRow(p, index, total, slug = '') {
   return `
-    <div class="adm-hp-item adm-hp-selected-item" data-id="${p.id}" data-slug="${slug}">
+    <div class="adm-hp-item adm-hp-selected-item" data-id="${p.id}" data-slug="${slug}" draggable="true">
+      <span class="adm-hp-drag-handle" title="Kéo thả">⠿</span>
       <span class="adm-hp-order">${index + 1}</span>
       <img src="${esc(p.image)}" alt="">
       <span class="adm-hp-name">${esc(p.name)}</span>
-      <div class="adm-hp-actions">
-        <button type="button" class="adm-btn-icon cat-move-up" data-id="${p.id}" data-slug="${slug}" ${index === 0 ? 'disabled' : ''} title="Lên">↑</button>
-        <button type="button" class="adm-btn-icon cat-move-down" data-id="${p.id}" data-slug="${slug}" ${index === total - 1 ? 'disabled' : ''} title="Xuống">↓</button>
-        <button type="button" class="adm-btn-icon cat-remove" data-id="${p.id}" data-slug="${slug}" title="Xóa">×</button>
-      </div>
+      <button type="button" class="adm-btn-icon cat-remove" data-id="${p.id}" data-slug="${slug}" title="Xóa">×</button>
     </div>
   `;
 }
@@ -1461,15 +1458,14 @@ function bindCustomizeEvents() {
   });
 
   panel.querySelectorAll('.cat-remove').forEach(btn => {
-    btn.onclick = () => removeFromCategory(btn.dataset.slug, btn.dataset.id);
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      removeFromCategory(btn.dataset.slug, btn.dataset.id);
+    };
   });
 
-  panel.querySelectorAll('.cat-move-up').forEach(btn => {
-    btn.onclick = () => moveCategoryProduct(btn.dataset.slug, btn.dataset.id, -1);
-  });
-
-  panel.querySelectorAll('.cat-move-down').forEach(btn => {
-    btn.onclick = () => moveCategoryProduct(btn.dataset.slug, btn.dataset.id, 1);
+  panel.querySelectorAll('.cat-selected-list').forEach(list => {
+    bindCategoryDragDrop(list, list.dataset.slug || list.closest('.adm-cat-priority')?.dataset.slug);
   });
 
   panel.querySelectorAll('.cat-search').forEach(input => {
@@ -1525,15 +1521,67 @@ function removeFromCategory(slug, productId) {
   refreshCategoryPicker(slug);
 }
 
-function moveCategoryProduct(slug, id, dir) {
+function reorderCategoryProduct(slug, dragId, targetId) {
+  if (!dragId || !targetId || dragId === targetId) return;
   const sec = getCategorySection(slug);
-  const ids = sec.productIds;
-  const i = ids.indexOf(id);
-  if (i < 0) return;
-  const j = i + dir;
-  if (j < 0 || j >= ids.length) return;
-  [ids[i], ids[j]] = [ids[j], ids[i]];
+  const ids = [...sec.productIds];
+  const from = ids.indexOf(dragId);
+  const to = ids.indexOf(targetId);
+  if (from < 0 || to < 0) return;
+  ids.splice(from, 1);
+  ids.splice(to, 0, dragId);
+  sec.productIds = ids;
   refreshCategoryPicker(slug);
+}
+
+function bindCategoryDragDrop(list, slug) {
+  if (!list || !slug || list.dataset.dragBound === '1') return;
+  list.dataset.dragBound = '1';
+
+  list.addEventListener('dragstart', (e) => {
+    const row = e.target.closest('.adm-hp-selected-item');
+    if (!row || !list.contains(row)) return;
+    list._dragId = row.dataset.id;
+    row.classList.add('is-dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', row.dataset.id);
+  });
+
+  list.addEventListener('dragend', () => {
+    list.querySelectorAll('.adm-hp-selected-item').forEach(el => el.classList.remove('is-dragging', 'drag-over'));
+    list._dragId = null;
+  });
+
+  list.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const row = e.target.closest('.adm-hp-selected-item');
+    list.querySelectorAll('.adm-hp-selected-item').forEach(el => el.classList.remove('drag-over'));
+    if (row && list.contains(row)) row.classList.add('drag-over');
+  });
+
+  list.addEventListener('dragleave', (e) => {
+    const row = e.target.closest('.adm-hp-selected-item');
+    if (row) row.classList.remove('drag-over');
+  });
+
+  list.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const row = e.target.closest('.adm-hp-selected-item');
+    const dragId = list._dragId || e.dataTransfer.getData('text/plain');
+    if (!row || !dragId) return;
+    reorderCategoryProduct(slug, dragId, row.dataset.id);
+  });
+}
+
+function bindCategorySelectedListEvents(list, slug) {
+  if (!list) return;
+  list.querySelectorAll('.cat-remove').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      removeFromCategory(btn.dataset.slug, btn.dataset.id);
+    };
+  });
+  bindCategoryDragDrop(list, slug);
 }
 
 function filterCategoryAvailable(slug, query) {
@@ -1555,7 +1603,6 @@ function filterCategoryAvailable(slug, query) {
 }
 
 function refreshCategoryPicker(slug) {
-  collectCategorySectionsFromDOM();
   const sec = getCategorySection(slug);
   const block = document.querySelector(`.adm-cat-priority[data-slug="${slug}"]`);
   if (!block) return;
@@ -1571,15 +1618,7 @@ function refreshCategoryPicker(slug) {
     selectedList.innerHTML = selectedProducts.length
       ? selectedProducts.map((p, i) => hpProductRow(p, i, selectedProducts.length, slug)).join('')
       : '<p class="adm-empty-sm">Chưa chọn — hiển thị theo tên A-Z</p>';
-    selectedList.querySelectorAll('.cat-remove').forEach(btn => {
-      btn.onclick = () => removeFromCategory(btn.dataset.slug, btn.dataset.id);
-    });
-    selectedList.querySelectorAll('.cat-move-up').forEach(btn => {
-      btn.onclick = () => moveCategoryProduct(btn.dataset.slug, btn.dataset.id, -1);
-    });
-    selectedList.querySelectorAll('.cat-move-down').forEach(btn => {
-      btn.onclick = () => moveCategoryProduct(btn.dataset.slug, btn.dataset.id, 1);
-    });
+    bindCategorySelectedListEvents(selectedList, slug);
   }
 
   const countEl = block.querySelector('.adm-count');
