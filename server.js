@@ -102,13 +102,16 @@ function formatPriceVnd(price) {
 }
 
 function formatLeadTelegramMessage(lead) {
+  const priceText = lead.product_price_label
+    || formatPriceVnd(lead.product_price);
+
   return [
     '🛵 <b>ĐẶT HÀNG MỚI - Yadea Tân Bình</b>',
     '',
     `• <b>Tên khách hàng:</b> ${escapeTelegramHtml(lead.name)}`,
     `• <b>Số điện thoại:</b> ${escapeTelegramHtml(lead.phone)}`,
     `• <b>Dòng Xe Muốn Mua:</b> ${escapeTelegramHtml(lead.product_name || '—')}`,
-    `• <b>Giá xe:</b> ${escapeTelegramHtml(formatPriceVnd(lead.product_price))}`,
+    `• <b>Giá xe:</b> ${escapeTelegramHtml(priceText)}`,
     `• <b>Ghi chú:</b> ${escapeTelegramHtml(lead.note || '—')}`,
   ].join('\n');
 }
@@ -215,6 +218,7 @@ async function handleAPI(req, res, pathname) {
       const phone = String(body.phone || '').trim();
       const product_name = String(body.product_name || '').trim();
       const product_price = body.product_price;
+      const product_price_label = String(body.product_price_label || '').trim();
       const note = String(body.note || '').trim();
 
       if (!name || !phone) {
@@ -222,7 +226,14 @@ async function handleAPI(req, res, pathname) {
         return;
       }
 
-      await sendTelegramMessage(formatLeadTelegramMessage({ name, phone, product_name, product_price, note }));
+      await sendTelegramMessage(formatLeadTelegramMessage({
+        name,
+        phone,
+        product_name,
+        product_price,
+        product_price_label,
+        note,
+      }));
       sendJSON(res, 200, { success: true });
     } catch (err) {
       sendJSON(res, 500, { error: err.message || 'Gửi Telegram thất bại' });

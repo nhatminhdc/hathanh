@@ -16,22 +16,22 @@
   "banners": [
     {
       "id": "1",
-      "image": "https://yadeavietthanh.vn/wp-content/uploads/2025/08/thu-cu-xe-xang-len-doi-xe-dien-desk.jpg",
-      "imageMobile": "https://yadeavietthanh.vn/wp-content/uploads/2024/01/yadea-viet-thanh-chinh-hang-mobile.jpg",
+      "image": "/uploads/1780210852488-1880e1c5.jpg",
+      "imageMobile": "/uploads/1780210858743-3eb67234.jpg",
       "alt": "Thu cũ đổi mới xe điện Yadea",
       "link": "#san-pham"
     },
     {
       "id": "2",
-      "image": "https://yadeavietthanh.vn/wp-content/uploads/2024/07/lai-thu-xe-ring-qua-that-cung-yadea-viet-thanh-yadeavietthanh.jpg",
-      "imageMobile": "https://yadeavietthanh.vn/wp-content/uploads/2024/07/lai-thu-xe-ring-qua-that-cung-yadea-viet-thanh-yadeavietthanh.jpg",
+      "image": "/uploads/1780210864314-887abfb3.jpg",
+      "imageMobile": "/uploads/1780210866773-b4e10f84.jpg",
       "alt": "Lái thử xe Yadea miễn phí",
       "link": "#lien-he"
     },
     {
       "id": "3",
-      "image": "https://yadeavietthanh.vn/wp-content/uploads/2024/01/yadea-viet-thanh-chinh-hang.jpg",
-      "imageMobile": "https://yadeavietthanh.vn/wp-content/uploads/2024/01/yadea-viet-thanh-chinh-hang-mobile.jpg",
+      "image": "/uploads/1780210872430-248c6cb4.jpg",
+      "imageMobile": "/uploads/1780210874837-17236879.jpg",
       "alt": "Yadea chính hãng",
       "link": "#san-pham"
     }

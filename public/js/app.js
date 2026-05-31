@@ -59,6 +59,7 @@ async function notifyTelegramLead(lead) {
       phone: lead.phone,
       product_name: lead.product_name,
       product_price: lead.product_price,
+      product_price_label: lead.product_price_label,
       note: lead.note,
     }),
   });
@@ -562,9 +563,10 @@ function openOrderModal(productId) {
     e.preventDefault();
     const form = e.target;
     const fd = new FormData(form);
-    const productId = fd.get('product');
-    const selected = siteData.products.find(p => p.id === productId);
-    const price = selected ? (selected.salePrice || selected.price) : null;
+    const productId = String(fd.get('product') || '');
+    const selected = siteData.products.find(p => String(p.id) === productId);
+    const price = selected ? (selected.salePrice || selected.price || 0) : 0;
+    const productPriceLabel = price > 0 ? formatPrice(price) : 'Liên hệ';
     const submitBtn = document.getElementById('order-submit-btn');
 
     submitBtn.disabled = true;
@@ -577,6 +579,7 @@ function openOrderModal(productId) {
         product_id: productId,
         product_name: selected?.name || '',
         product_price: price,
+        product_price_label: productPriceLabel,
         note: String(fd.get('note') || '').trim(),
         source: 'quick_order',
       };
