@@ -407,28 +407,23 @@ const DEFAULT_HOME_CATEGORIES = [
   { slug: 'xe-dap-dien', title: 'Xe đạp điện - trợ lực', perRow: 4, rows: 2, productIds: [] },
 ];
 
-function getSectionProducts(allProducts, section, hp) {
+function getSectionProducts(allProducts, section) {
   const limit = (section.perRow || 4) * (section.rows || 2);
   const byCategory = getProductsByCategory(allProducts, section.slug);
   const productMap = Object.fromEntries(allProducts.map(p => [p.id, p]));
+  const categoryIds = new Set(byCategory.map(p => p.id));
+  const ids = section.productIds || [];
 
-  if (section.productIds?.length) {
-    const picked = section.productIds.map(id => productMap[id]).filter(Boolean);
-    const pickedSet = new Set(section.productIds);
-    const rest = byCategory
-      .filter(p => !pickedSet.has(p.id))
-      .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-    const items = [...picked, ...rest].slice(0, limit);
-    return { items, hasMore: byCategory.length > limit };
+  if (!ids.length) {
+    return { items: [], hasMore: byCategory.length > 0 };
   }
 
-  const featuredIds = new Set(hp.featuredProductIds || []);
-  const sorted = [...byCategory].sort((a, b) => {
-    const af = featuredIds.has(a.id) ? 0 : 1;
-    const bf = featuredIds.has(b.id) ? 0 : 1;
-    return af - bf || a.name.localeCompare(b.name, 'vi');
-  });
-  return { items: sorted.slice(0, limit), hasMore: byCategory.length > limit };
+  const items = ids
+    .map(id => productMap[id])
+    .filter(p => p && categoryIds.has(p.id))
+    .slice(0, limit);
+
+  return { items, hasMore: byCategory.length > items.length };
 }
 
 function renderHomepageCategories(data, hp) {
@@ -439,7 +434,7 @@ function renderHomepageCategories(data, hp) {
   const moreLabel = hp.productsButtonText || 'XEM THÊM';
 
   el.innerHTML = sections.map(section => {
-    const { items, hasMore } = getSectionProducts(data.products, section, hp);
+    const { items, hasMore } = getSectionProducts(data.products, section);
     const title = section.title || data.categories.find(c => c.slug === section.slug)?.name || section.slug;
 
     if (!items.length) return '';

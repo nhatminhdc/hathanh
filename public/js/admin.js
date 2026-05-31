@@ -969,7 +969,7 @@ function renderHomepagePanel() {
         <h3>Sản phẩm ưu tiên (trong từng danh mục)</h3>
       </div>
       <div class="adm-card-body">
-        <p class="adm-panel-hint">Chọn xe hiển thị trước trong từng danh mục. Tiêu đề chỉ viết hoa chữ cái đầu (VD: Xe máy điện).</p>
+        <p class="adm-panel-hint">Chỉ sản phẩm được chọn mới hiển thị trên trang chủ (tối đa 8/danh mục). Tiêu đề chỉ viết hoa chữ cái đầu (VD: Xe máy điện).</p>
         <div class="adm-cat-priority-list">
           ${sections.map(section => renderCategoryPriorityBlock(section)).join('')}
         </div>
@@ -1003,7 +1003,7 @@ function renderCategoryPriorityBlock(section) {
           <div class="adm-hp-selected cat-selected-list" id="cat-selected-${slug}" data-slug="${slug}">
             ${selectedProducts.length
               ? selectedProducts.map((p, i) => hpProductRow(p, i, selectedProducts.length, slug)).join('')
-              : '<p class="adm-empty-sm">Chưa chọn — hiển thị theo tên A-Z</p>'}
+              : '<p class="adm-empty-sm">Chưa chọn — không hiển thị trên trang chủ</p>'}
           </div>
         </div>
         <div class="adm-hp-col">
@@ -1617,7 +1617,7 @@ function refreshCategoryPicker(slug) {
   if (selectedList) {
     selectedList.innerHTML = selectedProducts.length
       ? selectedProducts.map((p, i) => hpProductRow(p, i, selectedProducts.length, slug)).join('')
-      : '<p class="adm-empty-sm">Chưa chọn — hiển thị theo tên A-Z</p>';
+      : '<p class="adm-empty-sm">Chưa chọn — không hiển thị trên trang chủ</p>';
     bindCategorySelectedListEvents(selectedList, slug);
   }
 
