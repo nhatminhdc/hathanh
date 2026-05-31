@@ -1,5 +1,5 @@
-const { readProductList } = require('../lib/site-data');
-const { sendJson } = require('../lib/http');
+const { readProductList } = require('../../lib/site-data');
+const { sendJson } = require('../../lib/http');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
