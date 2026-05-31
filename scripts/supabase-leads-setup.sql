@@ -1,5 +1,4 @@
--- Chạy trong Supabase: SQL Editor (nếu chưa có bảng hoặc cần bật quyền ghi)
--- Cột khớp với form "Đặt hàng nhanh" trong public/js/app.js
+-- Chạy trong Supabase: SQL Editor
 
 create table if not exists public.leads (
   id uuid primary key default gen_random_uuid(),
@@ -23,3 +22,45 @@ create policy "Allow anonymous insert leads"
   with check (true);
 
 grant insert on public.leads to anon;
+
+-- Kiểm tra trùng SĐT: mỗi số chỉ gửi 1 lần/ngày (giờ Việt Nam)
+create or replace function public.check_lead_today(input_phone text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  normalized text;
+begin
+  normalized := regexp_replace(coalesce(input_phone, ''), '[^0-9]', '', 'g');
+  if normalized like '84%' then
+    normalized := '0' || substring(normalized from 3);
+  end if;
+  if length(normalized) = 9 and normalized like '9%' then
+    normalized := '0' || normalized;
+  end if;
+
+  return exists (
+    select 1
+    from public.leads l
+    where regexp_replace(coalesce(l.phone, ''), '[^0-9]', '', 'g') = normalized
+      and l.created_at >= date_trunc('day', now() at time zone 'Asia/Ho_Chi_Minh')
+  );
+end;
+$$;
+
+revoke all on function public.check_lead_today(text) from public;
+grant execute on function public.check_lead_today(text) to anon;
+
+-- Fallback nếu chưa dùng RPC: cho phép SELECT tối thiểu để kiểm tra trùng
+drop policy if exists "Allow anon check duplicate phone today" on public.leads;
+create policy "Allow anon check duplicate phone today"
+  on public.leads
+  for select
+  to anon
+  using (
+    created_at >= date_trunc('day', now() at time zone 'Asia/Ho_Chi_Minh')
+  );
+
+grant select (id, phone, created_at) on public.leads to anon;

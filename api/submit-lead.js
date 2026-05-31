@@ -1,31 +1,7 @@
-const { getSupabaseConfig } = require('../lib/env');
 const { parseBody, sendJson } = require('../lib/http');
 const { formatLeadTelegramMessage, sendTelegramMessage } = require('../lib/telegram');
-
-async function insertLeadToSupabase(lead) {
-  const cfg = getSupabaseConfig();
-  if (!cfg?.url || !cfg?.anonKey) {
-    throw new Error('Chưa cấu hình Supabase');
-  }
-
-  const baseUrl = cfg.url.replace(/\/$/, '');
-  const table = cfg.table || 'leads';
-  const res = await fetch(`${baseUrl}/rest/v1/${table}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: cfg.anonKey,
-      Authorization: `Bearer ${cfg.anonKey}`,
-      Prefer: 'return=minimal',
-    },
-    body: JSON.stringify(lead),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    throw new Error(detail || `Supabase HTTP ${res.status}`);
-  }
-}
+const { checkLeadSubmittedToday, insertLeadToSupabase } = require('../lib/leads');
+const { isValidVnPhone } = require('../lib/phone');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -45,6 +21,20 @@ module.exports = async (req, res) => {
 
     if (!name || !phone) {
       sendJson(res, 400, { error: 'Thiếu họ tên hoặc số điện thoại' });
+      return;
+    }
+
+    if (!isValidVnPhone(phone)) {
+      sendJson(res, 400, { error: 'Số điện thoại không hợp lệ' });
+      return;
+    }
+
+    const alreadySubmitted = await checkLeadSubmittedToday(phone);
+    if (alreadySubmitted) {
+      sendJson(res, 429, {
+        error: 'Số điện thoại này đã gửi đơn hàng hôm nay. Vui lòng thử lại vào ngày mai hoặc gọi hotline 0933 969396.',
+        code: 'DUPLICATE_PHONE',
+      });
       return;
     }
 

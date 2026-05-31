@@ -57,13 +57,20 @@ async function submitOrderLead(lead) {
     body: JSON.stringify(lead),
   });
 
-  if (!res.ok) {
-    let detail = '';
-    try { detail = await res.text(); } catch { /* ignore */ }
-    throw new Error(detail || `HTTP ${res.status}`);
+  let data = {};
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
   }
 
-  return res.json();
+  if (!res.ok) {
+    const err = new Error(data.error || `HTTP ${res.status}`);
+    err.code = data.code;
+    throw err;
+  }
+
+  return data;
 }
 
 function renderHeader(data) {
@@ -560,7 +567,11 @@ function openOrderModal(productId) {
       showToast('Cảm ơn bạn! Chúng tôi sẽ liên hệ lại sớm nhất.');
     } catch (err) {
       console.error('Lead submit error:', err);
-      showToast('Không gửi được đơn hàng. Gọi hotline 0933 969396 hoặc thử lại sau.');
+      if (err.code === 'DUPLICATE_PHONE') {
+        showToast(err.message || 'Số điện thoại này đã gửi đơn hôm nay. Vui lòng thử lại vào ngày mai.');
+      } else {
+        showToast('Không gửi được đơn hàng. Gọi hotline 0933 969396 hoặc thử lại sau.');
+      }
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'GỬI';
