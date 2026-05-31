@@ -16,21 +16,25 @@ Mở: **http://localhost:3000**
 
 Admin chạy trực tiếp tại **https://yadeatanbinh.vn/admin/**
 
-**Cấu hình Vercel (bắt buộc):**
+**Setup tự động (1 lệnh):**
+
+```bash
+SUPABASE_SERVICE_ROLE_KEY=eyJ... VERCEL_TOKEN=... node scripts/setup-production-admin.js
+```
+
+Lấy **service_role key**: Supabase → Settings → API → service_role → Reveal  
+Lấy **Vercel token**: https://vercel.com/account/tokens
+
+Script sẽ: tạo Supabase Storage, upload dữ liệu, set env Vercel, redeploy.
+
+**Env bắt buộc trên Vercel:**
 
 | Biến | Mô tả |
 |------|--------|
-| `SESSION_SECRET` | Chuỗi ngẫu nhiên ≥32 ký tự (cookie đăng nhập) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key từ Supabase (lưu dữ liệu admin) |
+| `SESSION_SECRET` | Chuỗi ngẫu nhiên ≥32 ký tự |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key Supabase |
 | `SUPABASE_URL` | URL project Supabase |
-
-**Supabase (chạy 1 lần):**
-
-1. SQL Editor → chạy `scripts/supabase-leads-setup.sql`
-2. SQL Editor → chạy `scripts/supabase-site-config-setup.sql`
-3. Seed dữ liệu: `node scripts/seed-site-config.js` (cần service role key trong env)
-
-Ảnh upload mới được lưu vào **Supabase Storage** (bucket `uploads`).
+| `SUPABASE_ANON_KEY` | Anon key Supabase |
 
 ### Local
 
