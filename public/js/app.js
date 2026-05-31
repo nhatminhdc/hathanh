@@ -28,25 +28,43 @@ function formatPrice(price) {
   return new Intl.NumberFormat('vi-VN').format(price) + ' đ';
 }
 
-const HOTLINE_DISPLAY = '0933 96 93 96';
+const HOTLINE_DISPLAY = '0933 96.93.96';
 
 function formatHotlineDisplay(phone) {
   const digits = String(phone || '').replace(/\D/g, '');
-  if (digits.startsWith('84')) {
-    const local = `0${digits.slice(2)}`;
-    if (local.length === 10) {
-      return `${local.slice(0, 4)} ${local.slice(4, 6)} ${local.slice(6, 8)} ${local.slice(8, 10)}`;
-    }
-  }
-  if (digits.length === 10 && digits.startsWith('0')) {
-    return `${digits.slice(0, 4)} ${digits.slice(4, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
+  let local = digits;
+  if (local.startsWith('84')) local = `0${local.slice(2)}`;
+  if (local.length === 9 && local.startsWith('9')) local = `0${local}`;
+  if (local.length === 10 && local.startsWith('0')) {
+    return `${local.slice(0, 4)} ${local.slice(4, 6)}.${local.slice(6, 8)}.${local.slice(8, 10)}`;
   }
   const trimmed = String(phone || '').trim();
   return trimmed || HOTLINE_DISPLAY;
 }
 
 function hotlineTel(phone) {
-  return formatHotlineDisplay(phone).replace(/\s/g, '');
+  return formatHotlineDisplay(phone).replace(/[\s.]/g, '');
+}
+
+function productTrustHTML(items) {
+  const list = items?.length ? items : [
+    { icon: '🛡️', iconType: 'emoji', title: 'Bảo hành 3 năm', subtitle: 'Chính hãng Yadea' },
+    { icon: '🚚', iconType: 'emoji', title: 'Vận chuyển phí 30Km', subtitle: 'Nội thành TP.HCM' },
+    { icon: '✅', iconType: 'emoji', title: 'Chính hãng 100%', subtitle: 'Đền tiền gấp 5 lần' },
+    { icon: '🔄', iconType: 'emoji', title: 'Đổi hàng miễn phí', subtitle: 'Trong 72 giờ' },
+  ];
+
+  return list.map(item => {
+    const isImage = item.iconType === 'image' || (item.icon && /^(\/|https?:)/.test(item.icon));
+    const iconHtml = isImage
+      ? `<img src="${item.icon}" alt="" class="product-trust-icon-img">`
+      : `<span class="product-trust-icon-emoji">${item.icon || '✓'}</span>`;
+    return `
+      <div class="product-trust-item">
+        ${iconHtml}
+        <div><strong>${item.title || ''}</strong><small>${item.subtitle || ''}</small></div>
+      </div>`;
+  }).join('');
 }
 
 function calcDiscount(price, salePrice) {
@@ -799,10 +817,7 @@ function renderProductDetail(product, data) {
           <button class="pd-btn pd-btn-order" onclick="openOrderModal('${product.id}')">ĐẶT HÀNG</button>
 
           <div class="product-trust-grid">
-            <div class="product-trust-item"><span>🛡️</span><div><strong>Bảo hành 3 năm</strong><small>Chính hãng Yadea</small></div></div>
-            <div class="product-trust-item"><span>🚚</span><div><strong>Vận chuyển phí 30Km</strong><small>Nội thành TP.HCM</small></div></div>
-            <div class="product-trust-item"><span>✅</span><div><strong>Chính hãng 100%</strong><small>Đền tiền gấp 5 lần</small></div></div>
-            <div class="product-trust-item"><span>🔄</span><div><strong>Đổi hàng miễn phí</strong><small>Trong 72 giờ</small></div></div>
+            ${productTrustHTML(data.productTrust)}
           </div>
         </div>
       </div>

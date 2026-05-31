@@ -338,6 +338,8 @@ ul { list-style: none; }
   border: 1px solid var(--gray-300); border-radius: var(--radius); background: var(--white);
 }
 .product-trust-item span { font-size: 22px; flex-shrink: 0; }
+.product-trust-icon-emoji { font-size: 22px; flex-shrink: 0; line-height: 1; }
+.product-trust-icon-img { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
 .product-trust-item strong { display: block; font-size: 13px; color: var(--dark); margin-bottom: 2px; }
 .product-trust-item small { font-size: 11px; color: var(--gray-500); }
 .product-detail-tabs {

@@ -4,7 +4,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const SITE_FILE = path.join(ROOT, 'data', 'site.json');
-const HOTLINE = '0933 96 93 96';
+const HOTLINE = '0933 96.93.96';
 
 function rebrandText(text) {
   if (typeof text !== 'string') return text;
@@ -17,6 +17,7 @@ function rebrandText(text) {
   t = t.replace(/Tổng [Đđ]ài(?:\s+hỗ trợ|\s+của[^.]{0,40})?\s*1900[\s.]*2082/gi, `Liên hệ tổng đài ${HOTLINE}`);
   t = t.replace(/hotline\s*1900[\s.]*2082/gi, `hotline ${HOTLINE}`);
   t = t.replace(/1900[\s.]*2082/g, HOTLINE);
+  t = t.replace(/0933\s*96[\s.]*93[\s.]*96/g, HOTLINE);
   t = t.replace(/0933\s*969396/g, HOTLINE);
 
   t = t.replace(/Xe [Đđ]iện Việt Thanh/g, 'Yadea Tân Bình');

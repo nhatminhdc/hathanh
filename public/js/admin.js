@@ -12,6 +12,7 @@ const ICONS = {
 };
 
 let adminData = null;
+let currentUser = null;
 let editingProduct = null;
 let editingBanner = null;
 let editingNews = null;
@@ -63,9 +64,11 @@ function showToast(msg, isError = false) {
 
 async function checkAuth() {
   try {
-    const { authenticated } = await api('/api/auth/check');
-    return authenticated;
+    const data = await api('/api/auth/check');
+    currentUser = data.user || null;
+    return data.authenticated;
   } catch {
+    currentUser = null;
     return false;
   }
 }
@@ -79,6 +82,9 @@ function renderShell(active, title, showSearch = false) {
   const productCount = adminData?.products?.length || 0;
   const websitePages = ['customize', 'banners', 'news', 'settings'];
   const websiteOpen = websitePages.includes(active);
+  const isAdmin = currentUser?.role === 'admin';
+  const userInitial = (currentUser?.name || currentUser?.username || 'A').charAt(0).toUpperCase();
+  const userLabel = currentUser?.name || currentUser?.username || 'Admin';
 
   document.getElementById('admin-sidebar').innerHTML = `
     <div class="adm-sidebar-brand">
@@ -107,7 +113,7 @@ function renderShell(active, title, showSearch = false) {
           <a href="/admin/customize.html" class="adm-nav-sub-item ${active === 'customize' ? 'active' : ''}">Tùy chỉnh website</a>
           <a href="/admin/banners.html" class="adm-nav-sub-item ${active === 'banners' ? 'active' : ''}">Banner</a>
           <a href="/admin/news.html" class="adm-nav-sub-item ${active === 'news' ? 'active' : ''}">Tin tức</a>
-          <a href="/admin/settings.html" class="adm-nav-sub-item ${active === 'settings' ? 'active' : ''}">Bảo mật</a>
+          ${isAdmin ? `<a href="/admin/settings.html" class="adm-nav-sub-item ${active === 'settings' ? 'active' : ''}">Bảo mật & Nhân viên</a>` : ''}
         </div>
       </div>
       <a href="/" class="adm-nav-item" target="_blank">
@@ -139,8 +145,8 @@ function renderShell(active, title, showSearch = false) {
     <div class="adm-topbar-actions">
       <a href="/" target="_blank" class="adm-btn adm-btn-outline adm-btn-sm">${ICONS.external} Xem website</a>
       <div class="adm-user">
-        <div class="adm-user-avatar">A</div>
-        <span class="adm-user-name">Admin</span>
+        <div class="adm-user-avatar">${userInitial}</div>
+        <span class="adm-user-name">${esc(userLabel)}</span>
       </div>
     </div>
   `;
@@ -488,23 +494,49 @@ async function runPriceSync() {
 /* ─── Settings ─── */
 async function initSettings() {
   if (!(await checkAuth())) { window.location.href = '/admin/'; return; }
+  if (currentUser?.role !== 'admin') {
+    window.location.href = '/admin/dashboard.html';
+    return;
+  }
   adminData = await api('/api/admin/data');
-  renderShell('settings', 'Bảo mật');
+  renderShell('settings', 'Bảo mật & Nhân viên');
   renderSiteSettings();
+}
+
+async function loadUsers() {
+  return api('/api/admin/users');
 }
 
 function renderSiteSettings() {
   document.getElementById('settings-content').innerHTML = `
     <div class="adm-card">
+      <div class="adm-card-header"><h3>Tài khoản nhân viên</h3></div>
+      <div class="adm-card-body">
+        <p class="adm-panel-hint">Tạo tài khoản cho nhân viên chỉnh sửa website (sản phẩm, banner, tin tức, tùy chỉnh). Nhân viên không quản lý được tài khoản khác.</p>
+        <div id="users-list"><p>Đang tải...</p></div>
+        <hr style="margin:20px 0;border:none;border-top:1px solid var(--adm-border)">
+        <h4 style="margin-bottom:12px">Thêm nhân viên mới</h4>
+        <form id="user-form">
+          <div class="adm-form-row">
+            <div class="adm-form-group"><label>Họ tên</label><input class="adm-input" name="name" required placeholder="Nguyễn Văn A"></div>
+            <div class="adm-form-group"><label>Tên đăng nhập</label><input class="adm-input" name="username" required placeholder="nhanvien1"></div>
+          </div>
+          <div class="adm-form-group"><label>Mật khẩu</label><input class="adm-input" type="password" name="password" required minlength="6"></div>
+          <button type="submit" class="adm-btn adm-btn-primary">+ Thêm nhân viên</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="adm-card">
       <div class="adm-card-header"><h3>Tùy chỉnh website</h3></div>
       <div class="adm-card-body">
-        <p class="adm-panel-hint">Logo, favicon, banner, sản phẩm trang chủ, chân trang và liên hệ được quản lý tại trang Tùy chỉnh website.</p>
+        <p class="adm-panel-hint">Logo, banner, sản phẩm trang chủ, cam kết sản phẩm, chân trang và liên hệ.</p>
         <a href="/admin/customize.html" class="adm-btn adm-btn-primary">→ Mở Tùy chỉnh website</a>
       </div>
     </div>
 
     <div class="adm-card">
-      <div class="adm-card-header"><h3>Bảo mật</h3></div>
+      <div class="adm-card-header"><h3>Đổi mật khẩu của bạn</h3></div>
       <div class="adm-card-body">
         <form id="password-form">
           <div class="adm-form-row">
@@ -517,6 +549,29 @@ function renderSiteSettings() {
       </div>
     </div>
   `;
+
+  renderUsersTable();
+
+  document.getElementById('user-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    try {
+      await api('/api/admin/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: fd.get('name'),
+          username: fd.get('username'),
+          password: fd.get('password'),
+          role: 'staff',
+        }),
+      });
+      showToast('Đã thêm nhân viên!');
+      e.target.reset();
+      renderUsersTable();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
 
   document.getElementById('password-form').onsubmit = async (e) => {
     e.preventDefault();
@@ -536,6 +591,82 @@ function renderSiteSettings() {
       showToast(err.message, true);
     }
   };
+}
+
+async function renderUsersTable() {
+  const el = document.getElementById('users-list');
+  if (!el) return;
+  try {
+    const users = await loadUsers();
+    el.innerHTML = `
+      <table class="adm-table">
+        <thead><tr><th>Họ tên</th><th>Đăng nhập</th><th>Vai trò</th><th>Trạng thái</th><th></th></tr></thead>
+        <tbody>
+          ${users.map(u => `
+            <tr>
+              <td>${esc(u.name)}</td>
+              <td><code>${esc(u.username)}</code></td>
+              <td>${u.role === 'admin' ? 'Quản trị' : 'Nhân viên'}</td>
+              <td>${u.active === false ? 'Đã khóa' : 'Hoạt động'}</td>
+              <td>
+                ${u.role !== 'admin' ? `
+                  <button type="button" class="adm-btn adm-btn-ghost adm-btn-sm" data-reset-user="${esc(u.id)}">Đặt lại MK</button>
+                  <button type="button" class="adm-btn adm-btn-ghost adm-btn-sm" data-toggle-user="${esc(u.id)}">${u.active === false ? 'Mở khóa' : 'Khóa'}</button>
+                  <button type="button" class="adm-btn adm-btn-ghost adm-btn-sm" data-delete-user="${esc(u.id)}">Xóa</button>
+                ` : '<span class="adm-panel-hint">—</span>'}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+
+    el.querySelectorAll('[data-reset-user]').forEach(btn => {
+      btn.onclick = async () => {
+        const pwd = prompt('Mật khẩu mới cho nhân viên (tối thiểu 6 ký tự):');
+        if (!pwd || pwd.length < 6) return;
+        try {
+          await api(`/api/admin/users/${btn.dataset.resetUser}`, {
+            method: 'PUT',
+            body: JSON.stringify({ password: pwd }),
+          });
+          showToast('Đã đặt lại mật khẩu!');
+        } catch (err) {
+          showToast(err.message, true);
+        }
+      };
+    });
+
+    el.querySelectorAll('[data-toggle-user]').forEach(btn => {
+      btn.onclick = async () => {
+        const user = users.find(u => u.id === btn.dataset.toggleUser);
+        try {
+          await api(`/api/admin/users/${btn.dataset.toggleUser}`, {
+            method: 'PUT',
+            body: JSON.stringify({ active: user?.active === false }),
+          });
+          showToast('Đã cập nhật trạng thái!');
+          renderUsersTable();
+        } catch (err) {
+          showToast(err.message, true);
+        }
+      };
+    });
+
+    el.querySelectorAll('[data-delete-user]').forEach(btn => {
+      btn.onclick = async () => {
+        if (!confirm('Xóa tài khoản nhân viên này?')) return;
+        try {
+          await api(`/api/admin/users/${btn.dataset.deleteUser}`, { method: 'DELETE' });
+          showToast('Đã xóa tài khoản!');
+          renderUsersTable();
+        } catch (err) {
+          showToast(err.message, true);
+        }
+      };
+    });
+  } catch (err) {
+    el.innerHTML = `<p class="adm-panel-hint">${esc(err.message)}</p>`;
+  }
 }
 
 /* ─── Website Customize ─── */
@@ -596,6 +727,14 @@ function ensureCustomizeDefaults() {
       isMain: true,
     }];
   }
+  if (!adminData.productTrust?.length) {
+    adminData.productTrust = [
+      { id: '1', icon: '🛡️', iconType: 'emoji', title: 'Bảo hành 3 năm', subtitle: 'Chính hãng Yadea' },
+      { id: '2', icon: '🚚', iconType: 'emoji', title: 'Vận chuyển phí 30Km', subtitle: 'Nội thành TP.HCM' },
+      { id: '3', icon: '✅', iconType: 'emoji', title: 'Chính hãng 100%', subtitle: 'Đền tiền gấp 5 lần' },
+      { id: '4', icon: '🔄', iconType: 'emoji', title: 'Đổi hàng miễn phí', subtitle: 'Trong 72 giờ' },
+    ];
+  }
 }
 
 async function initCustomize() {
@@ -613,6 +752,7 @@ function renderCustomize() {
     { id: 'brand', label: 'Logo & Thương hiệu' },
     { id: 'banner', label: 'Banner' },
     { id: 'homepage', label: 'Trang chủ' },
+    { id: 'productTrust', label: 'Cam kết SP' },
     { id: 'footer', label: 'Chân trang' },
     { id: 'contact', label: 'Liên hệ' },
   ];
@@ -640,6 +780,7 @@ function renderCustomize() {
   if (customizeTab === 'brand') panel.innerHTML = renderBrandPanel();
   else if (customizeTab === 'banner') panel.innerHTML = renderBannerPanel();
   else if (customizeTab === 'homepage') panel.innerHTML = renderHomepagePanel();
+  else if (customizeTab === 'productTrust') panel.innerHTML = renderProductTrustPanel();
   else if (customizeTab === 'footer') panel.innerHTML = renderFooterPanel();
   else if (customizeTab === 'contact') panel.innerHTML = renderContactPanel();
 
@@ -866,7 +1007,7 @@ function renderBranchEditorRow(b, index, total) {
       </label>
       <div class="adm-form-row">
         <div class="adm-form-group"><label>Tên chi nhánh</label><input class="adm-input branch-name" value="${esc(b.name)}" placeholder="CN1 - Tân Bình"></div>
-        <div class="adm-form-group"><label>Hotline</label><input class="adm-input branch-hotline" value="${esc(b.hotline)}" placeholder="0933 96 93 96"></div>
+        <div class="adm-form-group"><label>Hotline</label><input class="adm-input branch-hotline" value="${esc(b.hotline)}" placeholder="0933 96.93.96"></div>
       </div>
       <div class="adm-form-group"><label>Địa chỉ</label><input class="adm-input branch-address" value="${esc(b.address)}"></div>
       <div class="adm-form-group">
@@ -875,6 +1016,73 @@ function renderBranchEditorRow(b, index, total) {
       </div>
     </div>
   `;
+}
+
+function renderProductTrustPanel() {
+  const items = adminData.productTrust || [];
+  return `
+    <div class="adm-card">
+      <div class="adm-card-header"><h3>Cam kết trên trang chi tiết sản phẩm</h3></div>
+      <div class="adm-card-body">
+        <p class="adm-panel-hint">4 ô cam kết hiển thị dưới nút MUA NGAY (như ảnh mẫu). Dùng emoji hoặc URL ảnh icon.</p>
+        <div class="adm-trust-list" id="trust-list">
+          ${items.map((item, i) => renderProductTrustRow(item, i)).join('')}
+        </div>
+        <button type="button" class="adm-btn adm-btn-outline adm-btn-sm" id="add-trust-btn">+ Thêm ô cam kết</button>
+        <button class="adm-btn adm-btn-primary" id="save-trust-btn" style="margin-top:20px">💾 Lưu cam kết sản phẩm</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderProductTrustRow(item, index) {
+  const isImage = item.iconType === 'image' || (item.icon && /^(\/|https?:)/.test(item.icon));
+  const preview = isImage && item.icon
+    ? `<img src="${esc(item.icon)}" alt="" style="width:28px;height:28px;object-fit:contain">`
+    : `<span style="font-size:24px">${esc(item.icon || '✓')}</span>`;
+  return `
+    <div class="adm-trust-row" data-index="${index}">
+      <div class="adm-trust-preview">${preview}</div>
+      <div class="adm-trust-fields">
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label>Loại icon</label>
+            <select class="adm-input trust-icon-type">
+              <option value="emoji" ${!isImage ? 'selected' : ''}>Emoji / ký tự</option>
+              <option value="image" ${isImage ? 'selected' : ''}>Ảnh (URL)</option>
+            </select>
+          </div>
+          <div class="adm-form-group">
+            <label>Icon</label>
+            <input class="adm-input trust-icon" value="${esc(item.icon || '')}" placeholder="🛡️ hoặc /uploads/icon.png">
+          </div>
+        </div>
+        <div class="adm-form-row">
+          <div class="adm-form-group"><label>Tiêu đề</label><input class="adm-input trust-title" value="${esc(item.title || '')}"></div>
+          <div class="adm-form-group"><label>Mô tả ngắn</label><input class="adm-input trust-subtitle" value="${esc(item.subtitle || '')}"></div>
+        </div>
+        ${imageUploadField(`trust-img-${index}`, 'Hoặc tải ảnh icon', isImage ? item.icon : '', 'product')}
+      </div>
+      <button type="button" class="adm-btn-icon trust-remove" title="Xóa">×</button>
+    </div>
+  `;
+}
+
+function collectProductTrustFromDOM() {
+  return [...document.querySelectorAll('.adm-trust-row')].map((row, i) => {
+    const iconType = row.querySelector('.trust-icon-type')?.value || 'emoji';
+    const imgInput = document.getElementById(`trust-img-${i}`);
+    const iconField = row.querySelector('.trust-icon');
+    let icon = iconField?.value.trim() || '';
+    if (iconType === 'image' && imgInput?.value.trim()) icon = imgInput.value.trim();
+    return {
+      id: String(i + 1),
+      iconType,
+      icon,
+      title: row.querySelector('.trust-title')?.value.trim() || '',
+      subtitle: row.querySelector('.trust-subtitle')?.value.trim() || '',
+    };
+  }).filter(item => item.title || item.subtitle || item.icon);
 }
 
 function renderContactPanel() {
@@ -888,7 +1096,7 @@ function renderContactPanel() {
         <div class="adm-form-section">
           <div class="adm-form-section-title">📞 Số điện thoại & mạng xã hội</div>
           <div class="adm-form-row">
-            <div class="adm-form-group"><label>Hotline</label><input class="adm-input" id="c-hotline" value="${esc(s.hotline)}"></div>
+            <div class="adm-form-group"><label>Hotline</label><input class="adm-input" id="c-hotline" value="${esc(s.hotline)}" placeholder="0933 96.93.96"></div>
             <div class="adm-form-group"><label>SĐT tư vấn</label><input class="adm-input" id="c-phone" value="${esc(s.phone)}"></div>
           </div>
           <div class="adm-form-row">
@@ -1066,6 +1274,40 @@ function bindCustomizeEvents() {
       showCompanyInfo: document.getElementById('f-show-company').checked,
     };
     await saveData();
+  });
+
+  document.getElementById('save-trust-btn')?.addEventListener('click', async () => {
+    adminData.productTrust = collectProductTrustFromDOM();
+    await saveData();
+  });
+
+  document.getElementById('add-trust-btn')?.addEventListener('click', () => {
+    adminData.productTrust = collectProductTrustFromDOM();
+    adminData.productTrust.push({
+      id: String(adminData.productTrust.length + 1),
+      icon: '✓',
+      iconType: 'emoji',
+      title: '',
+      subtitle: '',
+    });
+    document.getElementById('customize-panel').innerHTML = renderProductTrustPanel();
+    bindCustomizeEvents();
+  });
+
+  panel.querySelectorAll('.trust-remove').forEach(btn => {
+    btn.onclick = () => {
+      btn.closest('.adm-trust-row')?.remove();
+    };
+  });
+
+  panel.querySelectorAll('.trust-icon-type').forEach(sel => {
+    sel.onchange = () => {
+      const row = sel.closest('.adm-trust-row');
+      const iconInput = row?.querySelector('.trust-icon');
+      if (iconInput && sel.value === 'emoji' && /^(\/|https?:)/.test(iconInput.value)) {
+        iconInput.value = '✓';
+      }
+    };
   });
 
   document.getElementById('save-contact-btn')?.addEventListener('click', async () => {

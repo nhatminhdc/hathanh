@@ -5,7 +5,15 @@ const crypto = require('crypto');
 const { URL } = require('url');
 
 const { syncProducts } = require('./scripts/sync-products');
-const { readData } = require('./lib/site-data');
+const { readData, writeData } = require('./lib/site-data');
+const {
+  findUserByCredentials,
+  publicUser,
+  createUser,
+  updateUser,
+  deleteUser,
+  changePassword,
+} = require('./lib/admin-auth');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
@@ -28,12 +36,31 @@ const MIME = {
   '.woff2': 'font/woff2',
 };
 
-function sha256(str) {
-  return crypto.createHash('sha256').update(str).digest('hex');
+
+function createSession(res, user) {
+  const id = crypto.randomBytes(32).toString('hex');
+  SESSIONS.set(id, {
+    expires: Date.now() + SESSION_TTL,
+    userId: user.id,
+    username: user.username,
+    role: user.role,
+    name: user.name,
+  });
+  res.setHeader('Set-Cookie', `session=${id}; HttpOnly; Path=/; SameSite=Strict; Max-Age=${SESSION_TTL / 1000}`);
+  return id;
 }
 
-function writeData(data) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+function requireSession(req, res, adminOnly = false) {
+  const session = getSession(req);
+  if (!session) {
+    sendJSON(res, 401, { error: 'Unauthorized' });
+    return null;
+  }
+  if (adminOnly && session.role !== 'admin') {
+    sendJSON(res, 403, { error: 'Chỉ quản trị viên mới có quyền này' });
+    return null;
+  }
+  return session;
 }
 
 function parseBody(req) {
@@ -61,13 +88,6 @@ function getSession(req) {
     return null;
   }
   return session;
-}
-
-function createSession(res) {
-  const id = crypto.randomBytes(32).toString('hex');
-  SESSIONS.set(id, { expires: Date.now() + SESSION_TTL });
-  res.setHeader('Set-Cookie', `session=${id}; HttpOnly; Path=/; SameSite=Strict; Max-Age=${SESSION_TTL / 1000}`);
-  return id;
 }
 
 function sendJSON(res, status, data, cache = false) {
@@ -123,10 +143,10 @@ async function handleAPI(req, res, pathname) {
   if (pathname === '/api/auth/login' && req.method === 'POST') {
     try {
       const { username, password } = await parseBody(req);
-      const data = readData();
-      if (username === data.admin.username && sha256(password) === data.admin.passwordHash) {
-        createSession(res);
-        sendJSON(res, 200, { success: true });
+      const user = findUserByCredentials(username, password);
+      if (user) {
+        createSession(res, user);
+        sendJSON(res, 200, { success: true, user: publicUser(user) });
       } else {
         sendJSON(res, 401, { error: 'Sai tên đăng nhập hoặc mật khẩu' });
       }
@@ -146,15 +166,21 @@ async function handleAPI(req, res, pathname) {
   }
 
   if (pathname === '/api/auth/check' && req.method === 'GET') {
-    sendJSON(res, 200, { authenticated: !!getSession(req) });
+    const session = getSession(req);
+    sendJSON(res, 200, {
+      authenticated: !!session,
+      user: session ? {
+        id: session.userId,
+        username: session.username,
+        role: session.role,
+        name: session.name,
+      } : null,
+    });
     return;
   }
 
-  const session = getSession(req);
-  if (!session) {
-    sendJSON(res, 401, { error: 'Unauthorized' });
-    return;
-  }
+  const session = requireSession(req, res);
+  if (!session) return;
 
   if (pathname === '/api/admin/data' && req.method === 'GET') {
     sendJSON(res, 200, readData());
@@ -177,16 +203,53 @@ async function handleAPI(req, res, pathname) {
   if (pathname === '/api/admin/password' && req.method === 'PUT') {
     try {
       const { currentPassword, newPassword } = await parseBody(req);
-      const data = readData();
-      if (sha256(currentPassword) !== data.admin.passwordHash) {
-        sendJSON(res, 401, { error: 'Mật khẩu hiện tại không đúng' });
-        return;
-      }
-      data.admin.passwordHash = sha256(newPassword);
-      writeData(data);
+      changePassword(session.userId, currentPassword, newPassword);
       sendJSON(res, 200, { success: true });
-    } catch {
-      sendJSON(res, 400, { error: 'Dữ liệu không hợp lệ' });
+    } catch (err) {
+      sendJSON(res, 400, { error: err.message || 'Dữ liệu không hợp lệ' });
+    }
+    return;
+  }
+
+  if (pathname === '/api/admin/users' && req.method === 'GET') {
+    if (!requireSession(req, res, true)) return;
+    const { getUsers } = require('./lib/admin-auth');
+    sendJSON(res, 200, getUsers().map(publicUser));
+    return;
+  }
+
+  if (pathname === '/api/admin/users' && req.method === 'POST') {
+    if (!requireSession(req, res, true)) return;
+    try {
+      const body = await parseBody(req);
+      const user = createUser(body);
+      sendJSON(res, 200, { success: true, user });
+    } catch (err) {
+      sendJSON(res, 400, { error: err.message || 'Không tạo được tài khoản' });
+    }
+    return;
+  }
+
+  const userMatch = pathname.match(/^\/api\/admin\/users\/([^/]+)$/);
+  if (userMatch && req.method === 'PUT') {
+    if (!requireSession(req, res, true)) return;
+    try {
+      const body = await parseBody(req);
+      const user = updateUser(decodeURIComponent(userMatch[1]), body);
+      sendJSON(res, 200, { success: true, user });
+    } catch (err) {
+      sendJSON(res, 400, { error: err.message || 'Không cập nhật được tài khoản' });
+    }
+    return;
+  }
+
+  if (userMatch && req.method === 'DELETE') {
+    if (!requireSession(req, res, true)) return;
+    try {
+      deleteUser(decodeURIComponent(userMatch[1]));
+      sendJSON(res, 200, { success: true });
+    } catch (err) {
+      sendJSON(res, 400, { error: err.message || 'Không xóa được tài khoản' });
     }
     return;
   }

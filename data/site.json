@@ -4,9 +4,9 @@
     "tagline": "Xe điện Yadea chính hãng – Tân Bình, TP.HCM",
     "logo": "/uploads/1780142628347-0a414f66.png",
     "favicon": "https://yadeavietthanh.vn/wp-content/uploads/2025/10/logo-viet-thanh-2025-512x512-1-300x300.png",
-    "hotline": "0933 96 93 96",
-    "phone": "0933 96 93 96",
-    "zalo": "0933 96 93 96",
+    "hotline": "0933 96.93.96",
+    "phone": "0933 96.93.96",
+    "zalo": "0933 96.93.96",
     "facebook": "https://www.facebook.com/",
     "address": "658 Âu Cơ, P Bảy Hiền, TP.HCM",
     "email": "yadeatanbinh@gmail.com",
@@ -5226,7 +5226,17 @@
   ],
   "admin": {
     "username": "admin",
-    "passwordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+    "passwordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+    "users": [
+      {
+        "id": "admin",
+        "username": "admin",
+        "passwordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+        "role": "admin",
+        "name": "Quản trị viên",
+        "active": true
+      }
+    ]
   },
   "homepage": {
     "featuredProductIds": [
@@ -5390,7 +5400,7 @@
       "id": "main",
       "name": "Chi nhánh chính - Âu Cơ",
       "address": "658 Âu Cơ, P Bảy Hiền, TP.HCM",
-      "hotline": "0933 96 93 96",
+      "hotline": "0933 96.93.96",
       "mapLink": "",
       "isMain": true
     },
@@ -5451,5 +5461,35 @@
     "added": 0,
     "total": 41,
     "source": "https://yadeavietthanh.vn"
-  }
+  },
+  "productTrust": [
+    {
+      "id": "1",
+      "icon": "🛡️",
+      "iconType": "emoji",
+      "title": "Bảo hành 3 năm",
+      "subtitle": "Chính hãng Yadea"
+    },
+    {
+      "id": "2",
+      "icon": "🚚",
+      "iconType": "emoji",
+      "title": "Vận chuyển phí 30Km",
+      "subtitle": "Nội thành TP.HCM"
+    },
+    {
+      "id": "3",
+      "icon": "✅",
+      "iconType": "emoji",
+      "title": "Chính hãng 100%",
+      "subtitle": "Đền tiền gấp 5 lần"
+    },
+    {
+      "id": "4",
+      "icon": "🔄",
+      "iconType": "emoji",
+      "title": "Đổi hàng miễn phí",
+      "subtitle": "Trong 72 giờ"
+    }
+  ]
 }
