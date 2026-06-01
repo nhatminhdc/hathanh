@@ -292,6 +292,40 @@ function initMobileNav() {
   });
 }
 
+function goToProductSearch(query) {
+  const q = String(query || '').trim();
+  if (!q) return;
+  window.location.href = `/san-pham.html?q=${encodeURIComponent(q)}`;
+}
+
+function renderHomeProductSearch() {
+  const container = document.getElementById('products');
+  if (!container) return;
+
+  let wrap = document.getElementById('home-product-search');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'home-product-search';
+    wrap.className = 'home-product-search-wrap';
+    container.parentNode.insertBefore(wrap, container);
+  }
+
+  wrap.innerHTML = `
+    <form class="home-product-search" id="home-product-search-form" role="search">
+      ${ICONS.search}
+      <input type="search" name="q" id="home-search-input" placeholder="Tìm xe Yadea..." autocomplete="off" aria-label="Tìm sản phẩm">
+      <button type="submit" class="home-search-submit">Tìm</button>
+    </form>
+  `;
+
+  const form = document.getElementById('home-product-search-form');
+  const input = document.getElementById('home-search-input');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    goToProductSearch(input?.value);
+  });
+}
+
 function initSearch(data) {
   const input = document.getElementById('search-input');
   if (!input) return;
@@ -681,6 +715,7 @@ async function initHome() {
   if (hp.showProducts === false) {
     productsSection && (productsSection.style.display = 'none');
   } else {
+    renderHomeProductSearch();
     renderHomepageCategories(data, hp);
   }
 
