@@ -71,14 +71,20 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const telegramOk = await sendTelegramMessage(formatLeadTelegramMessage({
-      name,
-      phone,
-      product_name,
-      product_price,
-      product_price_label,
-      note,
-    })).then(() => true).catch(() => false);
+    let telegramOk = false;
+    try {
+      await sendTelegramMessage(formatLeadTelegramMessage({
+        name,
+        phone,
+        product_name,
+        product_price,
+        product_price_label,
+        note,
+      }));
+      telegramOk = true;
+    } catch (tgErr) {
+      console.error('Telegram send failed:', tgErr.message || tgErr);
+    }
 
     sendJson(res, 200, {
       success: true,
