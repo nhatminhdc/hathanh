@@ -21,14 +21,16 @@ alter table public.leads add column if not exists note text;
 alter table public.leads add column if not exists source text default 'quick_order';
 alter table public.leads add column if not exists created_at timestamptz default now();
 
-alter table public.leads enable row level security;
-
-drop policy if exists "Allow anonymous insert leads" on public.leads;
-create policy "Allow anonymous insert leads"
-  on public.leads for insert to anon with check (true);
-
-grant insert on public.leads to anon;
+-- Quyền ghi form (anon + service_role). Nếu tắt RLS trên Dashboard vẫn cần grant.
+grant usage on schema public to anon, authenticated, service_role;
+grant insert on public.leads to anon, authenticated, service_role;
 grant all on table public.leads to service_role;
+
+-- RLS (tùy chọn): bật nếu muốn policy; tắt RLS trên Dashboard thì bỏ qua block dưới.
+-- alter table public.leads enable row level security;
+-- drop policy if exists "Allow anonymous insert leads" on public.leads;
+-- create policy "Allow anonymous insert leads"
+--   on public.leads for insert to anon with check (true);
 
 -- Kiểm tra trùng SĐT: 1 lần/ngày (giờ Việt Nam) — không lộ dữ liệu qua SELECT
 create or replace function public.check_lead_today(input_phone text)

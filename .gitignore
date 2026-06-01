@@ -10,7 +10,6 @@ public/css/*.min.css
 data/telegram.json
 data/supabase.json
 data/telegram.deploy.json
-data/supabase.public.json
 lib/deploy-config.js
 scripts/pydeps/
 public/uploads/products/

@@ -24,6 +24,7 @@ TELEGRAM=$(read_cfg "$ROOT/data/telegram.json")
 
 SUPABASE_URL=$(node -e "console.log(JSON.parse(process.argv[1]).url)" "$SUPABASE")
 SUPABASE_ANON_KEY=$(node -e "console.log(JSON.parse(process.argv[1]).anonKey)" "$SUPABASE")
+SUPABASE_SERVICE_ROLE_KEY=$(node -e "console.log(JSON.parse(process.argv[1]).serviceRoleKey)" "$SUPABASE")
 SUPABASE_TABLE=$(node -e "console.log(JSON.parse(process.argv[1]).table || 'leads')" "$SUPABASE")
 TELEGRAM_BOT_TOKEN=$(node -e "console.log(JSON.parse(process.argv[1]).botToken)" "$TELEGRAM")
 TELEGRAM_CHAT_ID=$(node -e "console.log(JSON.parse(process.argv[1]).chatId)" "$TELEGRAM")
@@ -43,6 +44,7 @@ add_env() {
 echo "Đang set env vars cho project Vercel (yadeahathanh)..."
 add_env SUPABASE_URL "$SUPABASE_URL"
 add_env SUPABASE_ANON_KEY "$SUPABASE_ANON_KEY"
+add_env SUPABASE_SERVICE_ROLE_KEY "$SUPABASE_SERVICE_ROLE_KEY"
 add_env SUPABASE_TABLE "$SUPABASE_TABLE"
 add_env TELEGRAM_BOT_TOKEN "$TELEGRAM_BOT_TOKEN"
 add_env TELEGRAM_CHAT_ID "$TELEGRAM_CHAT_ID"
@@ -52,9 +54,6 @@ if [ -z "${SESSION_SECRET:-}" ]; then
 fi
 add_env SESSION_SECRET "$SESSION_SECRET"
 
-echo ""
-echo "⚠️  Thêm thủ công trên Vercel Dashboard:"
-echo "   SUPABASE_SERVICE_ROLE_KEY  (Supabase → Settings → API → service_role)"
 echo ""
 echo "Supabase SQL (chạy 1 lần):"
 echo "   scripts/supabase-site-config-setup.sql"
