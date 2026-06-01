@@ -1,6 +1,6 @@
-# Yadea Tân Bình
+# Yadea Hà Thành
 
-Website xe điện Yadea chính hãng tại Tân Bình, TP.HCM.
+Website xe điện Yadea chính hãng tại Hà Thành.
 
 ## Chạy website (local)
 
@@ -8,13 +8,13 @@ Website xe điện Yadea chính hãng tại Tân Bình, TP.HCM.
 node server.js
 ```
 
-Mở: **http://localhost:3000**
+Mở: **http://localhost:3001**
 
 ## Admin
 
-### Trên production (yadeatanbinh.vn)
+### Trên production (yadeahathanh.vn)
 
-Admin chạy trực tiếp tại **https://yadeatanbinh.vn/admin/**
+Admin chạy trực tiếp tại **https://yadeahathanh.vn/admin/**
 
 **Setup tự động (1 lệnh):**
 
@@ -38,6 +38,8 @@ Script sẽ: tạo Supabase Storage, upload dữ liệu, set env Vercel, redeplo
 
 ### Local
 
-- URL: **http://localhost:3000/admin/**
+- URL: **http://localhost:3001/admin/**
 - Đăng nhập mặc định: `admin` / `admin`
-- Dữ liệu lưu vào `data/site.json` (không cần Supabase)
+- Dữ liệu lưu vào `data/site.json` (mặc định local)
+- **Không** copy `data/supabase.json` từ dự án Yadea Tân Bình cũ — tạo Supabase project mới cho Hà Thành
+- Production (Vercel): cấu hình env Supabase **mới**, rồi `node scripts/sync-site-to-supabase.js`

@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
     const text = body.text || formatLeadTelegramMessage({
       name: 'Test online',
       phone: '0900000000',
-      product_name: 'Yadea Tân Bình — test production',
+      product_name: 'Yadea Hà Thành — test production',
       product_price_label: '—',
       note: body.note || 'Kiểm tra gửi group Telegram từ Vercel',
     }) + `\n\n<i>🌐 Production · ${new Date().toISOString()}</i>`;

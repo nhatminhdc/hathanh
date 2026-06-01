@@ -320,7 +320,7 @@ async function initDashboard() {
 
     <div class="adm-card adm-sync-card">
       <div class="adm-card-header">
-        <h3>Cập nhật giá từ Yadea Tân Bình</h3>
+        <h3>Cập nhật giá từ Yadea Hà Thành</h3>
         ${renderSyncBadge(sync.status)}
       </div>
       <div class="adm-card-body">
@@ -802,7 +802,7 @@ function ensureCustomizeDefaults() {
   if (!adminData.branches?.length) {
     adminData.branches = [{
       id: 'main',
-      name: 'Chi nhánh chính - Âu Cơ',
+      name: 'Shop Xe Điện Hà Thành 1',
       address: adminData.site.address,
       hotline: adminData.site.hotline || adminData.site.phone,
       mapLink: '',
@@ -960,7 +960,7 @@ function renderHomepagePanel() {
           <div class="adm-form-group"><label>Tiêu đề tin tức</label><input class="adm-input" id="hp-news-title" value="${esc(hp.newsSectionTitle || 'Thông tin hữu ích')}"></div>
           <div class="adm-form-group"><label>Tiêu đề cửa hàng</label><input class="adm-input" id="hp-stores-title" value="${esc(hp.storesSectionTitle || 'Hệ thống cửa hàng')}"></div>
         </div>
-        <div class="adm-form-group"><label>Mô tả cửa hàng</label><input class="adm-input" id="hp-stores-sub" value="${esc(hp.storesSectionSubtitle || '')}" placeholder="VD: Cửa hàng xe điện Yadea Tân Bình"></div>
+        <div class="adm-form-group"><label>Mô tả cửa hàng</label><input class="adm-input" id="hp-stores-sub" value="${esc(hp.storesSectionSubtitle || '')}" placeholder="VD: Cửa hàng xe điện Yadea Hà Thành"></div>
       </div>
     </div>
 
@@ -1122,7 +1122,7 @@ function renderBranchEditorRow(b, index, total) {
       </label>
       <div class="adm-form-row">
         <div class="adm-form-group"><label>Tên chi nhánh</label><input class="adm-input branch-name" value="${esc(b.name)}" placeholder="CN1 - Tân Bình"></div>
-        <div class="adm-form-group"><label>Hotline</label><input class="adm-input branch-hotline" value="${esc(b.hotline)}" placeholder="0933 96.93.96"></div>
+        <div class="adm-form-group"><label>Hotline</label><input class="adm-input branch-hotline" value="${esc(b.hotline)}" placeholder="0979 569 779"></div>
       </div>
       <div class="adm-form-group"><label>Địa chỉ</label><input class="adm-input branch-address" value="${esc(b.address)}"></div>
       <div class="adm-form-group">
@@ -1211,7 +1211,7 @@ function renderContactPanel() {
         <div class="adm-form-section">
           <div class="adm-form-section-title">📞 Số điện thoại & mạng xã hội</div>
           <div class="adm-form-row">
-            <div class="adm-form-group"><label>Hotline</label><input class="adm-input" id="c-hotline" value="${esc(s.hotline)}" placeholder="0933 96.93.96"></div>
+            <div class="adm-form-group"><label>Hotline</label><input class="adm-input" id="c-hotline" value="${esc(s.hotline)}" placeholder="0979 569 779"></div>
             <div class="adm-form-group"><label>SĐT tư vấn</label><input class="adm-input" id="c-phone" value="${esc(s.phone)}"></div>
           </div>
           <div class="adm-form-row">

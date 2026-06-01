@@ -1,7 +1,7 @@
 {
-  "name": "yadea-tan-binh",
+  "name": "yadea-ha-thanh",
   "version": "1.0.0",
-  "description": "Website xe điện Yadea Tân Bình với trang Admin quản trị",
+  "description": "Website xe điện Yadea Hà Thành với trang Admin quản trị",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

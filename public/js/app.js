@@ -28,15 +28,18 @@ function formatPrice(price) {
   return new Intl.NumberFormat('vi-VN').format(price) + ' đ';
 }
 
-const HOTLINE_DISPLAY = '0933 96.93.96';
+const HOTLINE_DISPLAY = '0979 569 779';
 
 function formatHotlineDisplay(phone) {
   const digits = String(phone || '').replace(/\D/g, '');
   let local = digits;
   if (local.startsWith('84')) local = `0${local.slice(2)}`;
   if (local.length === 9 && local.startsWith('9')) local = `0${local}`;
+  if (local.length === 11 && local.startsWith('02')) {
+    return `${local.slice(0, 4)} - ${local.slice(4, 8)} - ${local.slice(8)}`;
+  }
   if (local.length === 10 && local.startsWith('0')) {
-    return `${local.slice(0, 4)} ${local.slice(4, 6)}.${local.slice(6, 8)}.${local.slice(8, 10)}`;
+    return `${local.slice(0, 4)} - ${local.slice(4, 7)} - ${local.slice(7)}`;
   }
   const trimmed = String(phone || '').trim();
   return trimmed || HOTLINE_DISPLAY;
@@ -227,7 +230,9 @@ function renderFooter(data) {
           <img src="${data.site.logo}" alt="${data.site.name}" loading="lazy">
           <p>${data.site.tagline}</p>
           <a href="tel:${hotlineTel(data.site.hotline)}" class="footer-hotline">${formatHotlineDisplay(data.site.hotline)}</a>
-          <p>${data.site.address}</p>
+          ${data.branches?.length
+    ? `<p>${data.branches.length} cửa hàng tại Quận Bình Tân, TP.HCM</p>`
+    : data.site.address ? `<p>${data.site.address}</p>` : ''}
         </div>
         <div>
           <h4>${f.aboutTitle || 'Về ' + data.site.name}</h4>
@@ -683,7 +688,7 @@ function renderStores(data, hp) {
     <div class="container">
       <div class="stores-header">
         <h2>${title}</h2>
-        <p>${subtitle || `Hệ thống ${raw.length} chi nhánh tại TP.HCM`}</p>
+        <p>${subtitle || `${raw.length} cửa hàng Yadea tại Quận Bình Tân, TP.HCM`}</p>
       </div>
       ${main ? `<div class="store-main-wrap">${branchCardHTML(main, true)}</div>` : ''}
       ${others.length ? `<div class="stores-grid">${others.map(b => branchCardHTML(b, false)).join('')}</div>` : ''}
@@ -1150,7 +1155,7 @@ async function initContactPage() {
         <div class="branches-section">
           <div class="section-header">
             <h2>Hệ thống chi nhánh</h2>
-            <p>${branches.length} cửa hàng Yadea tại TP.HCM</p>
+            <p>${branches.length} cửa hàng Yadea tại Quận Bình Tân, TP.HCM</p>
           </div>
           ${main ? `<div class="store-main-wrap">${branchCardHTML(main, true)}</div>` : ''}
           ${others.length ? `<div class="stores-grid">${others.map(b => branchCardHTML(b, false)).join('')}</div>` : ''}

@@ -4,7 +4,7 @@ const path = require('path');
 const { URL } = require('url');
 const { handleApiRequest } = require('./lib/api-handler');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const ROOT = __dirname;
 
 const MIME = {
@@ -76,7 +76,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`\n  🛵 Yadea Tân Bình đang chạy tại http://localhost:${PORT}`);
+  console.log(`\n  🛵 Yadea Hà Thành đang chạy tại http://localhost:${PORT}`);
   console.log(`  📋 Admin: http://localhost:${PORT}/admin/`);
   console.log(`  🔑 Đăng nhập: admin / admin\n`);
 });

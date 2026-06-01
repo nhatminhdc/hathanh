@@ -34,7 +34,7 @@ async function main() {
 
   await updateVercel();
   await sendTelegramMessage(
-    '🛵 <b>Yadea Tân Bình</b>\n\n✅ Cấu hình Telegram production đã cập nhật.\nĐơn hàng từ website sẽ gửi vào group này.'
+    '🛵 <b>Yadea Hà Thành</b>\n\n✅ Cấu hình Telegram production đã cập nhật.\nĐơn hàng từ website sẽ gửi vào group này.'
   );
   console.log('✅ Đã gửi tin test tới', chatId);
 }

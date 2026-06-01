@@ -132,7 +132,7 @@ async function redeploy(cfg) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      name: 'yadeatanbinh',
+      name: 'yadeahathanh',
       project: projectId,
       target: 'production',
       gitSource: { type: 'github', repo: 'Yadeatanbinh', ref: 'main', org: 'nhatminhdc' },
@@ -141,7 +141,7 @@ async function redeploy(cfg) {
 
   if (res.ok) {
     const data = await res.json();
-    console.log(`✅ Deploy: https://${data.url || 'yadeatanbinh.vercel.app'}`);
+    console.log(`✅ Deploy: https://${data.url || 'yadeahathanh.vercel.app'}`);
   } else {
     console.log('ℹ️  Redeploy thủ công trên Vercel Dashboard');
   }
@@ -174,7 +174,7 @@ async function main() {
   await setVercelEnv(cfg);
   await redeploy(cfg);
 
-  console.log('\n✅ Xong! Vào https://yadeatanbinh.vn/admin/');
+  console.log('\n✅ Xong! Vào https://yadeahathanh.vn/admin/');
   console.log('   Đăng nhập: admin / admin\n');
 }
 

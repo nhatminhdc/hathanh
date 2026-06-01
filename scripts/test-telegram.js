@@ -21,7 +21,7 @@ async function main() {
     product_name: 'Xe Máy Điện YADEA (test)',
     product_price: 15990000,
     product_price_label: '15.990.000 đ',
-    note: 'Tin nhắn kiểm tra bot — Yadea Tân Bình',
+    note: 'Tin nhắn kiểm tra bot — Yadea Hà Thành',
   });
 
   const text = sample + '\n\n<i>✅ Bot hoạt động · ' + new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) + '</i>';

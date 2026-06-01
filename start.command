@@ -26,14 +26,14 @@ if [ -z "$NODE" ]; then
 fi
 
 echo ""
-echo "  🛵 Đang khởi động Yadea Tân Bình..."
-echo "  📋 Admin: http://localhost:3000/admin/"
+echo "  🛵 Đang khởi động Yadea Hà Thành..."
+echo "  📋 Admin: http://localhost:3001/admin/"
 echo "  🔑 Đăng nhập: admin / admin"
 echo ""
 echo "  (Giữ cửa sổ này mở — đóng = tắt website)"
 echo ""
 
 sleep 1
-open "http://localhost:3000/admin/" 2>/dev/null || true
+open "http://localhost:3001/admin/" 2>/dev/null || true
 
 "$NODE" server.js

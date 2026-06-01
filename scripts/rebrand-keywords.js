@@ -4,7 +4,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const SITE_FILE = path.join(ROOT, 'data', 'site.json');
-const HOTLINE = '0933 96.93.96';
+const HOTLINE = '0979 569 779';
 
 function rebrandText(text) {
   if (typeof text !== 'string') return text;
@@ -20,10 +20,12 @@ function rebrandText(text) {
   t = t.replace(/0933\s*96[\s.]*93[\s.]*96/g, HOTLINE);
   t = t.replace(/0933\s*969396/g, HOTLINE);
 
-  t = t.replace(/Xe [Đđ]iện Việt Thanh/g, 'Yadea Tân Bình');
-  t = t.replace(/YADEA Việt Thanh/g, 'YADEA Tân Bình');
-  t = t.replace(/Yadea Việt Thanh/g, 'Yadea Tân Bình');
-  t = t.replace(/Việt Thanh/g, 'Yadea Tân Bình');
+  t = t.replace(/Xe [Đđ]iện Việt Thanh/g, 'Yadea Hà Thành');
+  t = t.replace(/YADEA Việt Thanh/g, 'YADEA Hà Thành');
+  t = t.replace(/Yadea Việt Thanh/g, 'Yadea Hà Thành');
+  t = t.replace(/YADEA Hà Thành/g, 'YADEA Hà Thành');
+  t = t.replace(/Yadea Hà Thành/g, 'Yadea Hà Thành');
+  t = t.replace(/Việt Thanh/g, 'Yadea Hà Thành');
 
   return t;
 }
@@ -46,7 +48,7 @@ if (data.site) {
 }
 if (Array.isArray(data.branches)) {
   for (const b of data.branches) {
-    if (b.isMain || String(b.hotline || '').replace(/\D/g, '') === '0933969396') {
+    if (b.isMain || String(b.hotline || '').replace(/\D/g, '') === '0979569779') {
       b.hotline = HOTLINE;
     }
   }

@@ -40,7 +40,7 @@ add_env() {
   echo "✓ $key"
 }
 
-echo "Đang set env vars cho project Vercel (yadeatanbinh)..."
+echo "Đang set env vars cho project Vercel (yadeahathanh)..."
 add_env SUPABASE_URL "$SUPABASE_URL"
 add_env SUPABASE_ANON_KEY "$SUPABASE_ANON_KEY"
 add_env SUPABASE_TABLE "$SUPABASE_TABLE"
