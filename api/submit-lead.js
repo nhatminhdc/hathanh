@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
     const product_name = String(body.product_name || '').trim();
     const product_price = body.product_price;
     const product_price_label = String(body.product_price_label || '').trim();
-    const note = String(body.note || '').trim();
+    const note = String(body.note || body.message || '').trim();
 
     if (!name || !phone) {
       sendJson(res, 400, { error: 'Thiếu họ tên hoặc số điện thoại' });
@@ -60,34 +60,31 @@ module.exports = async (req, res) => {
       source: body.source || 'quick_order',
     };
 
-    const results = await Promise.allSettled([
-      insertLeadToSupabase(lead),
-      sendTelegramMessage(formatLeadTelegramMessage({
-        name,
-        phone,
-        product_name,
-        product_price,
-        product_price_label,
-        note,
-      })),
-    ]);
-
-    const supabaseOk = results[0].status === 'fulfilled';
-    const telegramOk = results[1].status === 'fulfilled';
-
-    if (!supabaseOk && !telegramOk) {
+    let savedRow = null;
+    try {
+      savedRow = await insertLeadToSupabase(lead);
+    } catch (err) {
       sendJson(res, 500, {
-        error: 'Không gửi được đơn hàng',
-        supabase: results[0].reason?.message,
-        telegram: results[1].reason?.message,
+        error: err.message || 'Không lưu được đơn hàng vào Supabase',
+        code: 'SUPABASE_ERROR',
       });
       return;
     }
 
+    const telegramOk = await sendTelegramMessage(formatLeadTelegramMessage({
+      name,
+      phone,
+      product_name,
+      product_price,
+      product_price_label,
+      note,
+    })).then(() => true).catch(() => false);
+
     sendJson(res, 200, {
       success: true,
-      supabase: supabaseOk,
+      supabase: true,
       telegram: telegramOk,
+      id: savedRow?.id || null,
     });
   } catch (err) {
     sendJson(res, 500, { error: err.message || 'Gửi đơn hàng thất bại' });

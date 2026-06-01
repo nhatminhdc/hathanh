@@ -28,6 +28,7 @@ create policy "Allow anonymous insert leads"
   on public.leads for insert to anon with check (true);
 
 grant insert on public.leads to anon;
+grant all on table public.leads to service_role;
 
 -- Kiểm tra trùng SĐT: 1 lần/ngày (giờ Việt Nam) — không lộ dữ liệu qua SELECT
 create or replace function public.check_lead_today(input_phone text)

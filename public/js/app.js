@@ -134,6 +134,12 @@ async function submitOrderLead(lead) {
     throw err;
   }
 
+  if (!data.supabase) {
+    const err = new Error('Đơn hàng chưa được lưu vào hệ thống. Vui lòng gọi hotline.');
+    err.code = 'SUPABASE_ERROR';
+    throw err;
+  }
+
   return data;
 }
 
@@ -820,7 +826,7 @@ function renderOrderModal(product, allProducts, productId) {
       await submitOrderLead(lead);
       form.reset();
       closeOrderModal();
-      showToast('Cảm ơn bạn! Chúng tôi sẽ liên hệ lại sớm nhất.');
+      showToast('Đã ghi nhận đơn hàng! Chúng tôi sẽ liên hệ lại sớm nhất.');
     } catch (err) {
       console.error('Lead submit error:', err);
       if (err.code === 'DUPLICATE_PHONE') {
@@ -1144,7 +1150,8 @@ async function initContactPage() {
               <label>Nội dung</label>
               <textarea name="message" placeholder="Nội dung cần tư vấn..."></textarea>
             </div>
-            <button type="submit" class="btn btn-primary btn-lg" style="width:100%">GỬI YÊU CẦU</button>
+            <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+            <button type="submit" class="btn btn-primary btn-lg" id="contact-submit-btn" style="width:100%">GỬI YÊU CẦU</button>
           </form>
         </div>
       </div>
@@ -1167,10 +1174,42 @@ async function initContactPage() {
     </div>
   `;
 
-  document.getElementById('contact-form').onsubmit = (e) => {
+  const contactForm = document.getElementById('contact-form');
+  contactForm.onsubmit = async (e) => {
     e.preventDefault();
-    showToast('Cảm ơn bạn! Chúng tôi sẽ liên hệ lại sớm nhất.');
-    e.target.reset();
+    const form = e.target;
+    const btn = document.getElementById('contact-submit-btn');
+    const fd = new FormData(form);
+    const name = String(fd.get('name') || '').trim();
+    const phone = String(fd.get('phone') || '').trim();
+    const product_name = String(fd.get('product') || '').trim();
+
+    if (!name || !phone) {
+      showToast('Vui lòng nhập họ tên và số điện thoại.', true);
+      return;
+    }
+
+    btn.disabled = true;
+    const prevLabel = btn.textContent;
+    btn.textContent = 'ĐANG GỬI...';
+
+    try {
+      await submitOrderLead({
+        name,
+        phone,
+        product_name,
+        note: String(fd.get('message') || '').trim(),
+        source: 'contact',
+        website: String(fd.get('website') || '').trim(),
+      });
+      showToast('Đã ghi nhận yêu cầu! Chúng tôi sẽ liên hệ lại sớm nhất.');
+      form.reset();
+    } catch (err) {
+      showToast(err.message || 'Gửi yêu cầu thất bại. Vui lòng gọi hotline.', true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prevLabel;
+    }
   };
 }
 
