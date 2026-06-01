@@ -19,5 +19,11 @@ const pub = {
   table: cfg.table || 'leads',
 };
 
+const jsDest = path.join(ROOT, 'lib', 'supabase-public.js');
+const jsBody = `/** Anon config — bundle với serverless (form production). Không chứa service_role. */
+module.exports = ${JSON.stringify(pub, null, 2)};
+`;
+
 fs.writeFileSync(dest, JSON.stringify(pub, null, 2) + '\n');
-console.log('✅ Đã ghi data/supabase.public.json');
+fs.writeFileSync(jsDest, jsBody);
+console.log('✅ Đã ghi data/supabase.public.json và lib/supabase-public.js');
